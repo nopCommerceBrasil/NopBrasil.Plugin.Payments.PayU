@@ -28,7 +28,7 @@ namespace NopBrasil.Plugin.Payments.PayU.Controllers
         [ChildActionOnly]
         public ActionResult Configure()
         {
-            var model = new ConfigurationModel() { EmailPayU = _payUPaymentSettings.EmailPayU };
+            var model = new ConfigurationModel() { EmailPayU = _payUPaymentSettings.EmailPayU, PaymentMethodDescription = _payUPaymentSettings.PaymentMethodDescription };
             return View(@"~/Plugins/Payments.PayU/Views/PaymentPayU/Configure.cshtml", model);
         }
 
@@ -41,6 +41,7 @@ namespace NopBrasil.Plugin.Payments.PayU.Controllers
                 return Configure();
 
             _payUPaymentSettings.EmailPayU = model.EmailPayU;
+            _payUPaymentSettings.PaymentMethodDescription = model.PaymentMethodDescription;
             _settingService.SaveSetting(_payUPaymentSettings);
 
             return View(@"~/Plugins/Payments.PayU/Views/PaymentPayU/Configure.cshtml", model);
