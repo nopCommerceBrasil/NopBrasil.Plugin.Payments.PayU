@@ -1,8 +1,0 @@
-﻿Group: Payment methods
-FriendlyName: PayU
-SystemName: Payments.PayU
-Version: 1.00
-SupportedVersions: 3.90
-Author: nopCommerce Brasil - www.nopcommercebrasil.com - nopcommercebrasil@nopcommercebrasil.com
-DisplayOrder: 2
-FileName: NopBrasil.Plugin.Payments.PayU.dll

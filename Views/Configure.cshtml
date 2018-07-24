@@ -1,17 +1,10 @@
-﻿@{
-    Layout = "";
+﻿@model NopBrasil.Plugin.Payments.PayU.Models.ConfigurationModel
+
+@{
+    Layout = "_ConfigurePlugin";
 }
-@model ConfigurationModel
-@using NopBrasil.Plugin.Payments.PayU.Models;
-@using Nop.Web.Framework;
 
-<div style="color:Red;">
-    @Html.ValidationSummary(false)
-</div>
-
-@using (@Html.BeginForm())
-{
-    @Html.AntiForgeryToken()
+<form asp-controller="PaymentPayU" asp-action="Configure" method="post">
     <div class="panel-group">
         <div class="panel panel-default">
             <div class="panel-body">
@@ -24,32 +17,30 @@
                         Este plugin é open-source e seu código-fonte está disponível no <a href="https://github.com/nopCommerceBrasil">GitHub do NopCommerce Brasil</a> no repositório <a href="https://github.com/nopCommerceBrasil/NopBrasil.Plugin.Payments.PayU">NopBrasil.Plugin.Payments.PayU</a>
                     </p>
                     <br />
-
                 </div>
 
                 <div class="form-group">
                     <div class="col-md-3">
-                        @Html.NopLabelFor(model => model.EmailPayU)
+                        <nop-label asp-for="EmailPayU" />
                     </div>
                     <div class="col-md-9">
-                        @Html.EditorFor(model => model.EmailPayU)
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <div class="col-md-3">
-                        @Html.NopLabelFor(model => model.PaymentMethodDescription)
-                    </div>
-                    <div class="col-md-9">
-                        @Html.EditorFor(model => model.PaymentMethodDescription)
+                        <nop-editor asp-for="EmailPayU" />
+                        <span asp-validation-for="EmailPayU"></span>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <div class="col-md-3">
-                        &nbsp;
+                        <nop-label asp-for="PaymentMethodDescription" />
                     </div>
                     <div class="col-md-9">
+                        <nop-editor asp-for="PaymentMethodDescription" />
+                        <span asp-validation-for="PaymentMethodDescription"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-9 col-md-offset-3">
                         <input type="submit" name="save" class="btn bg-blue" value="@T("Admin.Common.Save")" />
                     </div>
                 </div>
@@ -57,6 +48,4 @@
             </div>
         </div>
     </div>
-}
-
-
+</form>

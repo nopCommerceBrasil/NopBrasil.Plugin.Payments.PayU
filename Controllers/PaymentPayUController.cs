@@ -1,42 +1,46 @@
-﻿using Nop.Core;
-using Nop.Services.Configuration;
-using Nop.Services.Payments;
+﻿using Nop.Services.Configuration;
 using Nop.Web.Framework.Controllers;
-using System.Collections.Generic;
-using System.Web.Mvc;
-using NopBrasil.Plugin.Payments.PayU.Services;
 using NopBrasil.Plugin.Payments.PayU.Models;
+using Nop.Web.Framework;
+using Microsoft.AspNetCore.Mvc;
+using Nop.Services.Security;
+using Nop.Web.Framework.Mvc.Filters;
 
 namespace NopBrasil.Plugin.Payments.PayU.Controllers
 {
+    [Area(AreaNames.Admin)]
     public class PaymentPayUController : BasePaymentController
     {
         private readonly ISettingService _settingService;
-        private readonly IWebHelper _webHelper;
-        private readonly IPaymentPayUService _payUService;
         private readonly PayUPaymentSettings _payUPaymentSettings;
+        private readonly IPermissionService _permissionService;
 
-        public PaymentPayUController(ISettingService settingService, IWebHelper webHelper, IPaymentPayUService payUService, PayUPaymentSettings payUPaymentSettings)
+        public PaymentPayUController(ISettingService settingService, PayUPaymentSettings payUPaymentSettings, IPermissionService permissionService)
         {
             this._settingService = settingService;
-            this._webHelper = webHelper;
-            this._payUService = payUService;
             this._payUPaymentSettings = payUPaymentSettings;
+            this._permissionService = permissionService;
         }
 
-        [AdminAuthorize]
-        [ChildActionOnly]
-        public ActionResult Configure()
+        [AuthorizeAdmin]
+        public IActionResult Configure()
         {
-            var model = new ConfigurationModel() { EmailPayU = _payUPaymentSettings.EmailPayU, PaymentMethodDescription = _payUPaymentSettings.PaymentMethodDescription };
-            return View(@"~/Plugins/Payments.PayU/Views/PaymentPayU/Configure.cshtml", model);
+            var model = new ConfigurationModel()
+            {
+                EmailPayU = _payUPaymentSettings.EmailPayU,
+                PaymentMethodDescription = _payUPaymentSettings.PaymentMethodDescription
+            };
+            return View(@"~/Plugins/Payments.PayU/Views/Configure.cshtml", model);
         }
 
         [HttpPost]
-        [AdminAuthorize]
-        [ChildActionOnly]
-        public ActionResult Configure(ConfigurationModel model)
+        [AuthorizeAdmin]
+        [AdminAntiForgery]
+        public IActionResult Configure(ConfigurationModel model)
         {
+            if (!_permissionService.Authorize(StandardPermissionProvider.ManagePaymentMethods))
+                return AccessDeniedView();
+
             if (!ModelState.IsValid)
                 return Configure();
 
@@ -44,15 +48,7 @@ namespace NopBrasil.Plugin.Payments.PayU.Controllers
             _payUPaymentSettings.PaymentMethodDescription = model.PaymentMethodDescription;
             _settingService.SaveSetting(_payUPaymentSettings);
 
-            return View(@"~/Plugins/Payments.PayU/Views/PaymentPayU/Configure.cshtml", model);
+            return View(@"~/Plugins/Payments.PayU/Views/Configure.cshtml", model);
         }
-
-
-        [ChildActionOnly]
-        public ActionResult PaymentInfo() => View("~/Plugins/Payments.PayU/Views/PaymentPayU/PaymentInfo.cshtml");
-
-        public override IList<string> ValidatePaymentForm(System.Web.Mvc.FormCollection form) => new List<string>();
-
-        public override ProcessPaymentRequest GetPaymentInfo(System.Web.Mvc.FormCollection form) => new ProcessPaymentRequest();
     }
 }

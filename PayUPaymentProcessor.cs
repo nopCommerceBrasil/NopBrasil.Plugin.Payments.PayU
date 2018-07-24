@@ -3,13 +3,13 @@ using Nop.Services.Logging;
 using Nop.Services.Payments;
 using System;
 using System.Collections.Generic;
-using System.Web;
-using System.Web.Routing;
 using Nop.Services.Localization;
 using Nop.Services.Configuration;
 using Nop.Core.Plugins;
 using NopBrasil.Plugin.Payments.PayU.Controllers;
 using NopBrasil.Plugin.Payments.PayU.Services;
+using Microsoft.AspNetCore.Http;
+using Nop.Core;
 
 namespace NopBrasil.Plugin.Payments.PayU
 {
@@ -19,13 +19,18 @@ namespace NopBrasil.Plugin.Payments.PayU
         private readonly ISettingService _settingService;
         private readonly IPaymentPayUService _payUService;
         private readonly PayUPaymentSettings _payUPaymentSettings;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IWebHelper _webHelper;
 
-        public PayUPaymentProcessor(ILogger logger, ISettingService settingService, IPaymentPayUService payUService, PayUPaymentSettings payUPaymentSettings)
+        public PayUPaymentProcessor(ILogger logger, ISettingService settingService, IPaymentPayUService payUService, PayUPaymentSettings payUPaymentSettings, 
+            IHttpContextAccessor httpContextAccessor, IWebHelper webHelper)
         {
             this._logger = logger;
             this._settingService = settingService;
             this._payUService = payUService;
             this._payUPaymentSettings = payUPaymentSettings;
+            this._httpContextAccessor = httpContextAccessor;
+            this._webHelper = webHelper;
         }
 
         public override void Install()
@@ -47,8 +52,10 @@ namespace NopBrasil.Plugin.Payments.PayU
 
         public ProcessPaymentResult ProcessPayment(ProcessPaymentRequest processPaymentRequest)
         {
-            var processPaymentResult = new ProcessPaymentResult();
-            processPaymentResult.NewPaymentStatus = PaymentStatus.Pending;
+            var processPaymentResult = new ProcessPaymentResult()
+            {
+                NewPaymentStatus = PaymentStatus.Pending
+            };
             return processPaymentResult;
         }
 
@@ -56,10 +63,10 @@ namespace NopBrasil.Plugin.Payments.PayU
         {
             try
             {
-                HttpContext.Current.Response.Clear();
-                HttpContext.Current.Response.Write(_payUService.GetStringPost(postProcessPaymentRequest));
-                HttpContext.Current.Response.Flush();
-                HttpContext.Current.Response.End();
+                _httpContextAccessor.HttpContext.Response.Clear();
+                var write = _httpContextAccessor.HttpContext.Response.WriteAsync(_payUService.GetStringPost(postProcessPaymentRequest));
+                _httpContextAccessor.HttpContext.Response.Body.FlushAsync();
+                _httpContextAccessor.HttpContext.Response.Body.EndWrite(write);
             }
             catch (Exception e)
             {
@@ -81,28 +88,6 @@ namespace NopBrasil.Plugin.Payments.PayU
 
         public bool CanRePostProcessPayment(Nop.Core.Domain.Orders.Order order) => false;
 
-        public void GetConfigurationRoute(out string actionName, out string controllerName, out System.Web.Routing.RouteValueDictionary routeValues)
-        {
-            actionName = "Configure";
-            controllerName = "PaymentPayU";
-            routeValues = new RouteValueDictionary()
-            {
-                { "Namespaces", "NopBrasil.Plugin.Payments.PayU.Controllers" },
-                { "area", null }
-            };
-        }
-
-        public void GetPaymentInfoRoute(out string actionName, out string controllerName, out System.Web.Routing.RouteValueDictionary routeValues)
-        {
-            actionName = "PaymentInfo";
-            controllerName = "PaymentPayU";
-            routeValues = new RouteValueDictionary()
-            {
-                { "Namespaces", "NopBrasil.Plugin.Payments.PayU.Controllers" },
-                { "area", null }
-            };
-        }
-
         public Type GetControllerType() => typeof(PaymentPayUController);
 
         public bool SupportCapture => false;
@@ -121,6 +106,14 @@ namespace NopBrasil.Plugin.Payments.PayU
 
         public bool SkipPaymentInfo => false;
 
+        public IList<string> ValidatePaymentForm(IFormCollection form) => new List<string>();
+
+        public ProcessPaymentRequest GetPaymentInfo(IFormCollection form) => new ProcessPaymentRequest();
+
+        public void GetPublicViewComponent(out string viewComponentName) => viewComponentName = "PaymentPayU";
+
         public string PaymentMethodDescription => _payUPaymentSettings.PaymentMethodDescription;
+
+        public override string GetConfigurationPageUrl() => $"{_webHelper.GetStoreLocation()}Admin/PaymentPayU/Configure";
     }
 }
