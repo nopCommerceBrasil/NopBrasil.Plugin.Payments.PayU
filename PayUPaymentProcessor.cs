@@ -21,9 +21,10 @@ namespace NopBrasil.Plugin.Payments.PayU
         private readonly PayUPaymentSettings _payUPaymentSettings;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IWebHelper _webHelper;
+        private readonly ILocalizationService _localizationService;
 
         public PayUPaymentProcessor(ILogger logger, ISettingService settingService, IPaymentPayUService payUService, PayUPaymentSettings payUPaymentSettings, 
-            IHttpContextAccessor httpContextAccessor, IWebHelper webHelper)
+            IHttpContextAccessor httpContextAccessor, IWebHelper webHelper, ILocalizationService localizationService)
         {
             this._logger = logger;
             this._settingService = settingService;
@@ -31,22 +32,23 @@ namespace NopBrasil.Plugin.Payments.PayU
             this._payUPaymentSettings = payUPaymentSettings;
             this._httpContextAccessor = httpContextAccessor;
             this._webHelper = webHelper;
+            this._localizationService = localizationService;
         }
 
         public override void Install()
         {
-            this.AddOrUpdatePluginLocaleResource("Plugins.Payments.EmailAdmin.PayU", "Email castrado no PayU");
-            this.AddOrUpdatePluginLocaleResource("Plugins.Payments.MethodDescription.PayU", "Descrição que será exibida no checkout");
-            this.AddOrUpdatePluginLocaleResource("NopBrasil.Plugins.Payments.PayU.Fields.Redirection", "Você será redirecionado para a pagina do PayU.");
+            _localizationService.AddOrUpdatePluginLocaleResource("Plugins.Payments.EmailAdmin.PayU", "Email castrado no PayU");
+            _localizationService.AddOrUpdatePluginLocaleResource("Plugins.Payments.MethodDescription.PayU", "Descrição que será exibida no checkout");
+            _localizationService.AddOrUpdatePluginLocaleResource("NopBrasil.Plugins.Payments.PayU.Fields.Redirection", "Você será redirecionado para a pagina do PayU.");
             base.Install();
         }
 
         public override void Uninstall()
         {
             _settingService.DeleteSetting<PayUPaymentSettings>();
-            this.DeletePluginLocaleResource("Plugins.Payments.EmailAdmin.PayU");
-            this.DeletePluginLocaleResource("Plugins.Payments.MethodDescription.PayU");
-            this.DeletePluginLocaleResource("NopBrasil.Plugins.Payments.PayU.Fields.Redirection");
+            _localizationService.DeletePluginLocaleResource("Plugins.Payments.EmailAdmin.PayU");
+            _localizationService.DeletePluginLocaleResource("Plugins.Payments.MethodDescription.PayU");
+            _localizationService.DeletePluginLocaleResource("NopBrasil.Plugins.Payments.PayU.Fields.Redirection");
             base.Uninstall();
         }
 
@@ -110,10 +112,10 @@ namespace NopBrasil.Plugin.Payments.PayU
 
         public ProcessPaymentRequest GetPaymentInfo(IFormCollection form) => new ProcessPaymentRequest();
 
-        public void GetPublicViewComponent(out string viewComponentName) => viewComponentName = "PaymentPayU";
-
         public string PaymentMethodDescription => _payUPaymentSettings.PaymentMethodDescription;
 
         public override string GetConfigurationPageUrl() => $"{_webHelper.GetStoreLocation()}Admin/PaymentPayU/Configure";
+
+        public string GetPublicViewComponentName() => "PaymentPayU";
     }
 }

@@ -20,13 +20,15 @@ namespace NopBrasil.Plugin.Payments.PayU.Services
         private readonly IWebHelper _webHelper;
         private readonly ICurrencyService _currencyService;
         private readonly CurrencySettings _currencySettings;
+        private readonly ICustomerService _customerService;
+        private readonly IGenericAttributeService _genericAttributeService;
         private readonly CustomerSettings _customerSettings;
         private readonly PayUPaymentSettings _payUPaymentSettings;
 
         private StringBuilder _strBuilderPost { get; set; }
 
         public PaymentPayUService(ISettingService settingService, IWebHelper webHelper, CustomerSettings customerSettings, PayUPaymentSettings payUPaymentSettings,
-            ICurrencyService currencyService, CurrencySettings currencySettings)
+            ICurrencyService currencyService, CurrencySettings currencySettings, ICustomerService customerService, IGenericAttributeService genericAttributeService)
         {
             this._settingService = settingService;
             this._webHelper = webHelper;
@@ -34,6 +36,8 @@ namespace NopBrasil.Plugin.Payments.PayU.Services
             this._payUPaymentSettings = payUPaymentSettings;
             this._currencyService = currencyService;
             this._currencySettings = currencySettings;
+            this._customerService = customerService;
+            this._genericAttributeService = genericAttributeService;
             this._strBuilderPost = new StringBuilder();
         }
 
@@ -78,7 +82,7 @@ namespace NopBrasil.Plugin.Payments.PayU.Services
             InsertParams("redirect_time", "3", true);
             InsertParams("id_pedido", postProcessPaymentRequest.Order.Id, true);
             InsertParams("email", @postProcessPaymentRequest.Order.Customer.Email, true);
-            InsertParams("nome", @postProcessPaymentRequest.Order.Customer.GetFullName(), true);
+            InsertParams("nome", _customerService.GetCustomerFullName(@postProcessPaymentRequest.Order.Customer), true);
             InsertJavaScriptPost();
 
             return _strBuilderPost.ToString();
@@ -97,10 +101,10 @@ namespace NopBrasil.Plugin.Payments.PayU.Services
         private void LoadCustomerData(PostProcessPaymentRequest postProcessPaymentRequest)
         {
             if (_customerSettings.GenderEnabled)
-                InsertParams(@"sexo", postProcessPaymentRequest.Order.Customer.GetAttribute<string>(SystemCustomerAttributeNames.Gender), true);
+                InsertParams(@"sexo", _genericAttributeService.GetAttribute<string>(postProcessPaymentRequest.Order.Customer, NopCustomerDefaults.GenderAttribute), true);
 
-            InsertParams(@"data_nascimento", postProcessPaymentRequest.Order.Customer.GetAttribute<string>(SystemCustomerAttributeNames.DateOfBirth), true);
-            InsertParams(@"telefone", postProcessPaymentRequest.Order.Customer.GetAttribute<string>(SystemCustomerAttributeNames.Phone), true);
+            InsertParams(@"data_nascimento", _genericAttributeService.GetAttribute<string>(postProcessPaymentRequest.Order.Customer, NopCustomerDefaults.DateOfBirthAttribute), true);
+            InsertParams(@"telefone", _genericAttributeService.GetAttribute<string>(postProcessPaymentRequest.Order.Customer, NopCustomerDefaults.PhoneAttribute), true);
 
             if (postProcessPaymentRequest.Order.ShippingAddress != null)
             {
