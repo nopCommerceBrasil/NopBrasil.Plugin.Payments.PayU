@@ -5,6 +5,8 @@ using Nop.Web.Framework;
 using Microsoft.AspNetCore.Mvc;
 using Nop.Services.Security;
 using Nop.Web.Framework.Mvc.Filters;
+using Nop.Services.Localization;
+using Nop.Services.Messages;
 
 namespace NopBrasil.Plugin.Payments.PayU.Controllers
 {
@@ -14,17 +16,24 @@ namespace NopBrasil.Plugin.Payments.PayU.Controllers
         private readonly ISettingService _settingService;
         private readonly PayUPaymentSettings _payUPaymentSettings;
         private readonly IPermissionService _permissionService;
+        private readonly INotificationService _notificationService;
+        private readonly ILocalizationService _localizationService;
 
-        public PaymentPayUController(ISettingService settingService, PayUPaymentSettings payUPaymentSettings, IPermissionService permissionService)
+        public PaymentPayUController(ISettingService settingService, PayUPaymentSettings payUPaymentSettings, IPermissionService permissionService, INotificationService notificationService, ILocalizationService localizationService)
         {
             this._settingService = settingService;
             this._payUPaymentSettings = payUPaymentSettings;
             this._permissionService = permissionService;
+            this._notificationService = notificationService;
+            this._localizationService = localizationService;
         }
 
         [AuthorizeAdmin]
         public IActionResult Configure()
         {
+            if (!_permissionService.Authorize(StandardPermissionProvider.ManageShippingSettings))
+                return AccessDeniedView();
+
             var model = new ConfigurationModel()
             {
                 EmailPayU = _payUPaymentSettings.EmailPayU,
@@ -47,7 +56,7 @@ namespace NopBrasil.Plugin.Payments.PayU.Controllers
             _payUPaymentSettings.EmailPayU = model.EmailPayU;
             _payUPaymentSettings.PaymentMethodDescription = model.PaymentMethodDescription;
             _settingService.SaveSetting(_payUPaymentSettings);
-
+            _notificationService.SuccessNotification(_localizationService.GetResource("Admin.Plugins.Saved"));
             return View(@"~/Plugins/Payments.PayU/Views/Configure.cshtml", model);
         }
     }

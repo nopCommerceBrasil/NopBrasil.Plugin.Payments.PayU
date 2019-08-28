@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using Nop.Services.Localization;
 using Nop.Services.Configuration;
-using Nop.Core.Plugins;
+using Nop.Services.Plugins;
 using NopBrasil.Plugin.Payments.PayU.Controllers;
 using NopBrasil.Plugin.Payments.PayU.Services;
 using Microsoft.AspNetCore.Http;
@@ -54,11 +54,10 @@ namespace NopBrasil.Plugin.Payments.PayU
 
         public ProcessPaymentResult ProcessPayment(ProcessPaymentRequest processPaymentRequest)
         {
-            var processPaymentResult = new ProcessPaymentResult()
+            return new ProcessPaymentResult()
             {
                 NewPaymentStatus = PaymentStatus.Pending
             };
-            return processPaymentResult;
         }
 
         public void PostProcessPayment(PostProcessPaymentRequest postProcessPaymentRequest)
