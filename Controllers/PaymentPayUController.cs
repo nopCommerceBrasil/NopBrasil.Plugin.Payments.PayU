@@ -10,6 +10,7 @@ using Nop.Services.Messages;
 
 namespace NopBrasil.Plugin.Payments.PayU.Controllers
 {
+    [AuthorizeAdmin]
     [Area(AreaNames.Admin)]
     public class PaymentPayUController : BasePaymentController
     {
